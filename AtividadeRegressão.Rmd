@@ -1,0 +1,356 @@
+---
+title: "ME613 - Atividade 6"
+author: "Andrei dos Santos Piscitelli RA:194181"
+output: pdf_document
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+header-includes:
+    \usepackage{float}
+    \usepackage{enumitem}
+    \usepackage{graphicx}
+
+---
+
+\fontsize{11}{22}
+\selectfont
+
+```{r setup, include=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(dplyr)
+```
+
+\begin{center}
+\includegraphics[width=12cm, height=12cm]{imagem}
+\end{center}
+ \clearpage
+```{r}
+# realiza a leitura dos dados e converte as variáveis categóricas para fator
+
+dados <- read.csv("C:/Users/andre/Desktop/CE.csv", header=TRUE)
+
+dados <- dados %>% mutate(
+    TP_ESTADO_CIVIL = factor(TP_ESTADO_CIVIL), TP_COR_RACA = factor(TP_COR_RACA), TP_ESCOLA = factor(TP_ESCOLA), TP_SEXO = factor(TP_SEXO), Q001 = factor(Q001), Q002 = factor(Q002), Q006 = factor(Q006), Q025 = factor(Q025)
+   
+)
+
+
+```
+
+
+```{r, results='hide'}
+#Verifica se há algum NA
+ 
+apply(is.na(dados), 2, which)
+```
+
+\section{Descrição dos Dados}
+
+O conjunto de dados a ser utilizado é composto por uma amostra de participantes do ENEM com residência no estado do Ceará(CE). O conjunto é composto de 500 obervações com as seguintes informações a respeito de cada participante:"Sigla da Unidade da Federação de residência","Idade"( Idade do inscrito em 31/12/2019. Idades inferiores a 10 anos e superiores a 100 anos estão com o campo vazio na base.),"Sexo", "Estado Civil", "Cor/raça","Tipo de escola do Ensino Médio","Nota média nas provas","Escolaridade do pai ou homem responsável pelo participante", "Escolaridade da mãe ou mulher responsável pelo participante","Número de moradores na residência atual","Renda mensal familiar" e "Acesso a internet na residência". Após uma verificação foi constatado que não há presença de campos em vazio ou que foram preenchidos incorretamente, logo o conjunto de dados está completo. Segue abaixo uma descrição breve das estatísticas referentes as variáveis quantitativas.
+
+```{r, message=FALSE}
+
+#realiza o sumário das variáveis quantitativas
+
+library(psych)
+
+sumario <- dados %>% select("Idade dos Participantes" = NU_IDADE ,"Número de Moradores" =  Q005,"Pontuação" = NU_MED) %>% describe() %>% select("Média" = mean, "Desvio Padrão" = sd, "Mediana" = median, "Valor Mínimo" = min, "Valor Máximo" = max)
+
+knitr::kable(sumario, caption = "Medidas Sumárias das Variáveis Quantitativas")
+
+```
+
+A maior parte das variáveis do modelo são classificadas como categóricas sendo elas com respostas de 2 ou 4 níveis, ou seja, há 2 ou 4 tipos de resposta para cada variável. A seguir temos informações sumárias a respeito dessas variáveis.
+
+```{r, message=FALSE}
+#realiza descrição das variáveis categóricas
+ 
+library(knitr)
+t1 <- data.frame(table(dados$TP_SEXO))
+t1$Var1 <- as.character(t1$Var1)
+t1[1,1] <- "Feminino"
+t1[2,1] <- "Masculino"
+colnames(t1) <- c("Gênero","Participantes")
+
+
+t2 <- data.frame(table(dados$TP_ESTADO_CIVIL))
+t2$Var1 <- as.character(t2$Var1)
+t2[1,1] <- "Solteiro(a)"
+t2[2,1] <- "Outros"
+colnames(t2) <- c("Estado Civil","Participantes")
+
+
+t3 <- data.frame(table(dados$TP_COR_RACA))
+t3$Var1 <- as.character(t3$Var1)
+t3[1,1] <- "Branca/amarela"
+t3[2,1] <- "Preta/parda/indígena"
+colnames(t3) <- c("Cor/Raça","Participantes")
+
+
+t4 <- data.frame(table(dados$TP_ESCOLA))
+t4$Var1 <- as.character(t4$Var1)
+t4[1,1] <- "Pública"
+t4[2,1] <- "Privada"
+colnames(t4) <- c("Tipo de Escola do Ensino Médio","Participantes")
+
+t5 <- data.frame(table(dados$Q025))
+t5$Var1 <- as.character(t5$Var1)
+t5[1,1] <- "Não"
+t5[2,1] <- "Sim"
+colnames(t5) <- c("Possuem Acesso a Internet","Participantes")
+
+t6 <- data.frame(table(dados$Q001))
+t6$Var1 <- as.character(t6$Var1)
+t6[1,1] <- "Fundamental"
+t6[2,1] <- "Médio"
+t6[3,1] <- "Superior"
+t6[4,1] <- "Não sabe"
+colnames(t6) <- c("Escolaridade do Homem Responsável pelo(a) Participante","Participantes")
+
+t7 <- data.frame(table(dados$Q002))
+t7$Var1 <- as.character(t7$Var1)
+t7[1,1] <- "Fundamental"
+t7[2,1] <- "Médio"
+t7[3,1] <- "Superior"
+t7[4,1] <- "Não sabe"
+colnames(t7) <- c("Escolaridade da Mulher Responsável pelo(a) Participante","Participantes")
+
+t8 <- data.frame(table(dados$Q006))
+t8$Var1 <- as.character(t8$Var1)
+t8[1,1] <- "Até R$ 998,00"
+t8[2,1] <- "De R$ 998,01 até R$ 1.996,00"
+t8[3,1] <- "De R$ 1.996,01 até R$ R$ 4.990,00"
+t8[4,1] <- "Mais de R$ 4.990,00"
+colnames(t8) <- c("Renda Mensal Familiar","Participantes")
+
+
+```
+
+
+
+```{r, message=FALSE}
+
+#table do primeiro grupo de var qualitativas(resposta dicotomica)
+library(knitr)
+library(kableExtra)
+
+kable(list(t1, t2, t3,t4,t5), booktabs = TRUE, valign = 't',caption = "Medidas Sumárias das Variáveis Qualitativas com duas respostas") %>% kable_styling(latex_options = "HOLD_position")
+```
+
+```{r, message=FALSE}
+
+#table do primeiro grupo de var qualitativas(resposta com 4 níveis)
+library(knitr)
+library(kableExtra)
+
+kable(list(t6, t7, t8), booktabs = TRUE, valign = 't', caption = "Medidas Sumárias das Variáveis Qualitativas com quatro respostas") %>% kable_styling(latex_options = "HOLD_position")
+```
+
+
+Após analisar os dados acima podemos notar que quase todos os participantes são solteiros, tem por volta de 18 anos de idade e o número de homens e mulheres é parecido. O gráfico abaixo ilustra a correlação entre as variáveis quantitativas, ou seja, se há uma relação forte entre as variáveis.
+
+
+```{r fig.align="center", out.width = "70%" , message=FALSE}
+library(ggplot2)
+library(GGally)
+library(ggthemes)
+
+plot1 <- dados %>% select("Idade dos Participantes" = NU_IDADE ,"Número de Moradores" =  Q005,"Pontuação" = NU_MED)
+ggpairs(plot1) +
+ggtitle("Correlação Entre as Variáveis Quantitativas") + 
+theme_tufte()
+
+
+```
+
+Segundo o gráfico a menor correlação foi de 1,4% e a maior de 17,1% e todas as correlações tem caráter negativo. Uma vez que fizemos uma breve análise descritiva dos dados iremos, através de um modelo de regressão, analisar de forma mais profunda a influência que as variáveis do conjunto de dados podem ter na nota dos participantes.
+
+&nbsp; 
+  
+\section{Modelagem Estatística}
+
+Para a análise será estimado, através do método de mínimos quadrados, um modelo de regressão linear múltipla. Em termos gerais o modelo é definido como:
+
+\begin{equation}
+Y_i = \beta_0 + \beta_1 X_{i1 }+ \beta_2 X_{i2} + ... + \beta_{p-1} X_{i,p-1} + \epsilon_i
+\end{equation}
+
+, onde:
+
+\begin{itemize}
+  \item $\beta_0,\beta_1,...,\beta_{p-1}$ são parâmetros.
+  \item $X_{i1 },...,X_{i,p-1 }$ são constantes conhecidas.
+  \item $\epsilon_i \overset{iid}{\sim}  \mathcal{N}(0,\sigma^2)$.
+  \item $i = 1,2,...,n $.
+\end{itemize}
+
+Para a realização do modelo foi excluída a variável referente a União Federal uma vez que ela só tem um tipo de resposta. O modelo realizado com todas as variáveis produz o seguinte resultado:
+
+
+```{r, echo = FALSE}
+
+# realiza o primeiro modelo(contém todas as variáveis)
+dados$SG_UF_RESIDENCIA <- NULL
+modelo1 <- lm(NU_MED ~ ., data = dados)
+
+```
+
+
+```{r, echo = FALSE}
+library(knitr)
+library(kableExtra)
+
+
+names(modelo1$coefficients) <- c('Intercepto','Idade','Sexo Masculino','Estado Civil Outros','Raça preta/parda/indígena','Estudou em Escola Privada','O Pai cursou Ensino Médio','O pai cursou Ensino superior','Não sabe a escolaridade do pai','A mãe cursou Ensino Médio','A mãe cursou Ensino superior','Não sabe a escolaridade da mãe','Número de Moradores na residência atual','Renda mensal familiar de R$ 998,01 até R$ 1.996,00. ','Renda mensal familiar de R$ 1.996,01 até R$ R$ 4.990,00.', 'Renda mensal familiar maior que R$ 4.990,00.','Residência possui acesso a internet')
+kable(coef(modelo1), booktabs = TRUE, valign = 't',caption = "Coeficientes do Modelo") %>% kable_styling(latex_options = "HOLD_position")
+
+
+```
+
+Para a avaliação do modelo serão realizados dois tipos de diagnósticos: O teste de Shapiro-Wilks, que busca analisar a normalidade dos resíduos e o teste de Breuch-Pagan que, supondo normalidade, avalia a heterocedasticidade. Para o primeiro modelo temos como resultado os seguintes dados:
+
+```{r, echo = FALSE, message=FALSE}
+library("car")
+library("knitr")
+library("kableExtra")
+#teste de normalidade shapiro
+shapiro <- shapiro.test(residuals(modelo1))
+#teste de homocedasticidade breuch pagan
+breuch <- ncvTest(modelo1)
+tabela <- data.frame(c("Teste de Shapiro-Wilks","Teste de Breusch-Pagan"),c(shapiro$p.value,breuch$p),c("Sucesso","Sucesso"))
+colnames(tabela) <- c("Teste","p-valor","Resultado")
+kable(tabela, booktabs = TRUE, valign = 't') %>% kable_styling(latex_options = "HOLD_position")
+
+```
+
+
+Segundo os testes temos que o modelo segue as condições de normalidade a também apresenta homocedasticidade, o que nos poupa do uso de ferramentas de correção como, por exemplo, transformação de variável. Serão analisados diferentes modelos com combinações distintas de variáveis preditoras para que seja selecionado um modelo mais adequado. Como o relatório está direcionado a pessoas sem profundo conhecimento na área de estatística iremos favoreçer modelos com menos variáveis pois eles são mais fáceis de serem interpretados, por tal motivo e pelo fato de o objetivo ser analisar a relação entre variáveis e não tentativas de predição será utilizado como critério de seleção o \textbf{\textit{BIC}}, abreviação para \textit{"Bayesian information criterion"}. O critério \textbf{\textit{BIC}} é mais exigente na sua avaliação, o que por consequência o faz favorecer modelos com menos variáveis. A seguinte tabela traz os 5 modelos com o menor número \textbf{\textit{BIC}}. Foi avaliado se todas as variáveis da cada modelo são significantes a nível de 5%. 
+
+```{r, echo = FALSE, message= FALSE}
+library(bestglm)
+
+#modelos da acordo com BIc
+modelos <- bestglm(dados,IC="BIC")
+
+#ordena os 5 menores valores de BIC
+a <- sort(modelos$Subsets$BIC)[1:5]
+#armazena a localização dos 5 menores valores
+melhor <- c(which(modelos$Subsets$BIC== a[1]), which(modelos$Subsets$BIC== a[2]),which(modelos$Subsets$BIC== a[3]), which(modelos$Subsets$BIC== a[4]), which(modelos$Subsets$BIC== a[5]))
+
+#define os 5 modelos
+
+modeloBic1 <- lm(NU_MED ~  NU_IDADE + TP_COR_RACA + TP_ESCOLA + Q001, data = dados)
+modeloBic2 <- lm(NU_MED ~  NU_IDADE + TP_COR_RACA + TP_ESCOLA + Q001 + Q005, data = dados)
+modeloBic3 <- lm(NU_MED ~  TP_ESCOLA + Q001 , data = dados)
+modeloBic4 <- lm(NU_MED ~  NU_IDADE + TP_COR_RACA + TP_ESCOLA + Q001 + Q005 + Q025, data = dados)
+modeloBic5 <- lm(NU_MED ~  NU_IDADE + TP_COR_RACA + TP_ESCOLA + Q001 + Q005 + Q006 + Q025, data = dados)
+significancia <- c("Todas significantes","Todas significantes","Todas significantes"," 1 não significante", "2 não significantes")
+    
+a <- data.frame(modelos$Subsets[melhor,c(13)])
+a$sig <- significancia
+colnames(a) <- c("BIC","Número de Variáveis Significantes a 5%")
+```
+
+```{r, echo = FALSE, message= FALSE}
+library(knitr)
+library(kableExtra)
+kable(a, booktabs = TRUE, valign = 't') %>% kable_styling(latex_options = "HOLD_position")
+
+```
+
+Podemos notar que o primeiro modelo na tabela possui o menor valor \textbf{\textit{BIC}} e todas as variáveis significantes a nível de 5%, o que o torna um forte candidato a ser o nosso modelo definitivo. Serão realizados os testes de Shapiro-Wilks e de Breuch-Pagan para verificar a sua aderência. Caso o modelo seja reprovado em um deles iremos analisar o modelo com o segundo menor valor \textbf{\textit{BIC}} e que apresenta todas as variáveis significantes a nível de 5%, repetiremos o procedimento até achar o modelo mais adequado. Na tabela abaixo estão apresentados os resultados do modelo com o menor valor \textbf{\textit{BIC}}, tido como `r round(a$BIC[1],3) `, para os testes propostos.
+
+
+```{r, echo = FALSE, message= FALSE}
+library("car")
+library("knitr")
+library("kableExtra")
+
+ModeloEscolhido <- modeloBic1
+
+#teste de normalidade shapiro
+shapiro <- shapiro.test(residuals(ModeloEscolhido))
+#teste de homocedasticidade breuch pagan
+breuch <- ncvTest(ModeloEscolhido)
+tabela <- data.frame(c("Teste de Shapiro-Wilks","Teste de Breusch-Pagan"),c(shapiro$p.value,breuch$p),c("Sucesso","Sucesso"))
+colnames(tabela) <- c("Teste","p-valor","Resultado")
+kable(tabela, booktabs = TRUE, valign = 't') %>% kable_styling(latex_options = "HOLD_position")
+
+
+
+```
+
+Como o modelo atendeu a todas as exigências propostas o usaremos como modelo definitivo para a nossa análise, o modelo possui $R^2$ no valor de 0,3104 e $R^2$ ajustado no valor de 0,302. A estatística F do modelo é de 36,98 com 6 e 493 graus de liberdade e p-valor menor que  $2,2 \times 10^{-16 }$. O modelo é definido da seguinte maneira:
+
+\begin{equation}
+Y_i = \beta_0 + \beta_1 X_{1 } + \beta_2 X_{2} + \beta_3 X_{3} + \beta_4 X_{4} + \beta_5 X_{5} + \beta_6 X_{6}
+\end{equation}
+
+as variáveis do modelo são:
+
+\begin{itemize}
+  \item $X_1 = idade$
+  \item $X_2 = \left\{ \begin{array}{rcl}
+0, & \mbox{caso participante seja de raça branca/amarela} \\
+1, & \mbox{caso participante seja de raça preta/parda/indígena}
+\end{array}\right.
+$
+  \item $X_3 = \left\{ \begin{array}{rcl}
+0, & \mbox{caso participante tenha estudado em escola pública} \\
+1, & \mbox{caso participante tenha estudado em escola privada}
+\end{array}\right.
+$
+  \item $X_4 = \left\{ \begin{array}{rcl}
+0, & \mbox{caso contrário} \\
+1, & \mbox{caso escolaridade do pai ou homem responsável seja ensino médio}
+\end{array}\right.
+$
+  \item $X_5 = \left\{ \begin{array}{rcl}
+0, & \mbox{caso contrário} \\
+1, & \mbox{caso escolaridade do pai ou homem responsável seja ensino superior}
+\end{array}\right.
+$
+  \item $X_6 = \left\{ \begin{array}{rcl}
+0, & \mbox{caso contrário} \\
+1, & \mbox{caso não saiba inoformar a escolaridade do pai ou homem responsável}
+\end{array}\right.
+$
+\end{itemize}
+
+A seguir temos uma tabela com a informação de todos os coeficientes presentes no modelo selecionado:
+
+```{r, echo = FALSE}
+library(knitr)
+library(kableExtra)
+
+
+names(ModeloEscolhido$coefficients) <- c('Intercepto','Idade','Raça preta/parda/indígena','Estudou em Escola Privada','O Pai cursou Ensino Médio','O pai cursou Ensino superior','Não sabe a escolaridade do pai')
+kable(coef(ModeloEscolhido), booktabs = TRUE, valign = 't',caption = "Coeficientes do Modelo Definitivo") %>% kable_styling(latex_options = "HOLD_position")
+
+
+```
+ 
+Uma vez analisados os elementos que compóem a equação, temos a seguir um gráfico de resíduos do modelo selecionado:
+ 
+```{r fig.align="center", out.width = "70%" , message=FALSE}
+resmodelo = resid(ModeloEscolhido)
+
+plot(ModeloEscolhido$fitted.values,resmodelo,ylab="Resíduos", xlab="Valores Ajustados", main="Gráfico de Resíduos") 
+abline(0, 0) 
+
+
+```
+
+
+\section{Interpetação e Conclusões}
+
+Ao interpetar o modelo percebemos que na amostra: pessoas de raça preta/parda/indígena costumam tirar menor pontuação na prova em comparação com pessoas de raça branca/amarela, pessoas oriundas de escolas da rede privada de ensino costumam ter pontuações maiores do que pessoas oriundas de escolas da rede pública, um maior nível de escolaridade do pai ou adulto responsável tem impacto positivo na nota do participante.Também nota-se que o avanço da idade tem um impacto negativo na nota do(a) estudante.
+
+Supondo uma forte correlação entre etnia e raça pode-se concluir que ,entre os indivíduos da amostra, as minorias étnicas/raciais possuem um desempenho menor no ENEM quando comparado com o desempenho de outros povos. Participantes de camadas menos favorecidas socioeconomicamente também apresentam um desempenho menor quando comparado ao de concorrentes com melhores condições socioeconômicas. 
+
+Devido a sua abrangência e pelo fato de ser um processo seletivo para uma grande parte das instituições do ensino superior em território nacional o ENEM é tido como uma das maiores formas de avaliação educacional do país, fazendo com que os resultados do exame possibilitem, ainda, o desenvolvimento de estudos e indicadores educacionais. Através da analise dos dados aqui apresentados fica evidente na amostra uma relação entre condições socioeconômicas e a formação educacional. Assim como esperado, os membros da amostra considerados menos favorecidos pela sociedade, se comparados aos outros membros, se encontram em situações menos vantajosas quando se fala de educação.
+
+
+
+
+
+
+
